@@ -1,0 +1,55 @@
+{
+    "name": "starme/elasticsearch",
+    "description": "Laravel, php elasticseach query builder to build complex queries using an elegant syntax",
+    "keywords": [
+        "elasticsearch",
+        "php",
+        "laravel",
+        "fulltext",
+        "indexing",
+        "builder"
+    ],
+    "license": "MIT",
+    "type": "package",
+    "authors": [
+        {
+            "name": "starme",
+            "email": "zj_ng@126.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Starme\\Elasticsearch\\": "src/"
+        },
+        "files": [
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Starme\\Elasticsearch\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=7.3",
+        "elasticsearch/elasticsearch": ">=7.0",
+        "illuminate/pagination": "*",
+        "illuminate/support": "*",
+        "symfony/var-dumper": "*",
+        "monolog/monolog": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "9.5.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Starme\\Elasticsearch\\ElasticsearchServiceProvider"
+            ],
+            "facades": {
+                "ES": "Starme\\Elasticsearch\\Facades\\ES",
+                "Index": "Starme\\Elasticsearch\\Facades\\Index"
+            }
+        }
+    },
+    "minimum-stability": "dev"
+}
