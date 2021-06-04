@@ -28,6 +28,14 @@ class ConfigProvider
                     ],
                 ],
             ],
+            'publish' => [
+                [
+                    'id' => 'config',
+                    'description' => 'elastice connection settings of this config file.',
+                    'source' => __DIR__ . '/../config/es.php',
+                    'destination' => BASE_PATH . '/config/autoload/es.php',
+                ],
+            ],
         ];
     }
 }
