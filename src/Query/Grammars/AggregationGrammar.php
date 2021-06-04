@@ -5,10 +5,9 @@ use Starme\Elasticsearch\Query\Builder;
 
 trait AggregationGrammar
 {
-
     public function compileAggregate(Builder $query, array $aggregate): array
     {
-        if( ! $aggregate) {
+        if (! $aggregate) {
             return [];
         }
         $method = 'compile'.ucfirst($aggregate['function']);
@@ -72,7 +71,7 @@ trait AggregationGrammar
         $wheres = $this->compileRaw($this->compileWheres($query));
         $filter = [];
         foreach ($wheres['bool'] as $type => $where) {
-            if($type == 'filter') {
+            if ($type == 'filter') {
                 $filter = head($where);
                 continue;
             }
@@ -81,5 +80,4 @@ trait AggregationGrammar
         $aggs = $this->compileAggregate($query, $query->aggregate);
         return compact('filter', 'aggs');
     }
-
 }

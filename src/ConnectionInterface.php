@@ -33,8 +33,6 @@ interface ConnectionInterface
 
     /**
      * Get a schema builder instance for the connection.
-     *
-     * @return \Starme\ElasticSearch\Schema\Builder
      */
 //    public function getSchemaBuilder()
 //    {
@@ -63,32 +61,24 @@ interface ConnectionInterface
     /**
      * Run a select statement against the elasticsearch.
      *
-     * @params array $params
-     * @throws \Starme\Elasticsearch\Exceptions\QueryException
      */
     public function select(array $params);
 
     /**
      * Run a insert statement against the elasticsearch.
      *
-     * @params array $params
-     * @throws \Starme\Elasticsearch\Exceptions\QueryException
      */
     public function insert(array $params);
 
     /**
      * Run a update statement against the elasticsearch.
      *
-     * @params array $params
-     * @throws \Starme\Elasticsearch\Exceptions\QueryException
      */
     public function update(array $params, $by_query=false);
 
     /**
      * Run a delete statement against the elasticsearch.
      *
-     * @params array $params
-     * @throws \Starme\Elasticsearch\Exceptions\QueryException
      */
     public function delete(array $params);
 

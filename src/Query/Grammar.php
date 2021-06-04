@@ -1,7 +1,6 @@
 <?php
 namespace Starme\Elasticsearch\Query;
 
-
 class Grammar
 {
     use Grammars\AggregationGrammar;
@@ -41,7 +40,7 @@ class Grammar
 
     public function compileSelect(Builder $query): array
     {
-        if(is_null($query->columns)) {
+        if (is_null($query->columns)) {
             $query->columns = ['*'];
         }
         return $this->concatenate($this->compileComponents($query));
@@ -61,7 +60,7 @@ class Grammar
             if (isset($query->$component)) {
                 $method = 'compile'.ucfirst($component);
 
-                $sql[$component] = array_filter($this->$method($query, $query->$component), function ($item){
+                $sql[$component] = array_filter($this->$method($query, $query->$component), function ($item) {
                     if (is_bool($item) || is_int($item)) {
                         return true;
                     }
@@ -247,7 +246,7 @@ class Grammar
 
     protected function compileBetween($column, $value): array
     {
-        if(count($value) !== 2) {
+        if (count($value) !== 2) {
             return [];
         }
         [$gte, $lt] = $value;
@@ -257,11 +256,11 @@ class Grammar
 
     protected function compileMeta($column, $value, $op=null): array
     {
-        if(is_array($column)) {
+        if (is_array($column)) {
             return ['multi_match' => ['query'=>$value, 'fields'=>$column]];
         }
 
-        if(is_array($value)) {
+        if (is_array($value)) {
             return ['terms' => [$column => $value]];
         }
 
@@ -280,10 +279,10 @@ class Grammar
     {
         $query = [];
         foreach ($wheres as $where) {
-            if(count($where['meta']) > 1) {
+            if (count($where['meta']) > 1) {
                 $where['meta'] = $this->compileRaw($where['meta'], true);
             }
-            if($where['type'] == 'should') {
+            if ($where['type'] == 'should') {
                 $where['type'] = 'filter';
                 $should = [];
                 foreach ($where['meta'] as $item) {
@@ -291,7 +290,7 @@ class Grammar
                 }
                 $where['meta'] = ['bool'=>['should'=>$should]];
             }
-            if($is_nested) {
+            if ($is_nested) {
                 $query[] = $where['meta'];
                 continue;
             }
@@ -451,5 +450,4 @@ class Grammar
         }
         return array_merge_recursive(...array_values($segments));
     }
-
 }

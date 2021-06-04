@@ -2,12 +2,14 @@
 namespace Starme\Elasticsearch\Eloquent;
 
 use ArrayAccess;
-use Illuminate\Support\Str;
-use Illuminate\Support\Traits\ForwardsCalls;
+use Hyperf\Utils\Str;
+use Hyperf\Utils\Traits\ForwardsCalls;
 use JsonSerializable;
 use Starme\Elasticsearch\Connection;
 use Starme\Elasticsearch\ConnectionResolverInterface as Resolver;
 use Starme\Elasticsearch\Query\Builder;
+use Hyperf\Di\Annotation\Inject;
+
 
 abstract class Model implements ArrayAccess, JsonSerializable
 {
@@ -19,7 +21,7 @@ abstract class Model implements ArrayAccess, JsonSerializable
      *
      * @var string|null
      */
-    protected $connection;
+    protected $connection = "default";
 
     /**
      * The table associated with the model.
@@ -30,6 +32,7 @@ abstract class Model implements ArrayAccess, JsonSerializable
 
     /**
      * The connection resolver instance.
+     * @inject
      *
      * @var \Starme\Elasticsearch\ConnectionResolverInterface
      */
@@ -38,7 +41,7 @@ abstract class Model implements ArrayAccess, JsonSerializable
     /**
      * The event dispatcher instance.
      *
-     * @var \Illuminate\Contracts\Events\Dispatcher
+     * @var \Hyperf\Event\EventDispatcher
      */
     protected static $dispatcher;
 
@@ -358,7 +361,6 @@ abstract class Model implements ArrayAccess, JsonSerializable
 
     public function jsonSerialize()
     {
-
     }
 
     /**

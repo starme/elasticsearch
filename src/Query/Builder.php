@@ -1,14 +1,14 @@
 <?php
 namespace Starme\Elasticsearch\Query;
 
-
 use Closure;
-use Illuminate\Container\Container;
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
+use Exception;
+use Hyperf\Di\Container;
+use Hyperf\Paginator\LengthAwarePaginator;
+use Hyperf\Paginator\Paginator;
+use Hyperf\Utils\Arr;
+use Hyperf\Utils\Collection;
+use Hyperf\Utils\Contracts\Arrayable;
 use InvalidArgumentException;
 
 class Builder
@@ -124,13 +124,12 @@ class Builder
 
     public function from($name): Builder
     {
-        if( str_contains($name, '.') ) {
+        if (str_contains($name, '.')) {
             // Table name support point syntax.
             // But only two
             [$this->index, $this->type] = explode('.', $name, '2');
-        } else
-        //
-        {
+        } else {
+            //
             $this->index = $name;
         }
 
@@ -157,7 +156,9 @@ class Builder
         // passed to the method, we will assume that the operator is an equals sign
         // and keep going. Otherwise, we'll require the operator to be passed in.
         [$value, $operator] = $this->prepareValueAndOperator(
-            $value, $operator, func_num_args() === 2
+            $value,
+            $operator,
+            func_num_args() === 2
         );
 
         // If the given operator is not found in the list of valid operators we will
@@ -663,7 +664,7 @@ class Builder
      * Execute the query as a "select" statement.
      *
      * @param  array|string  $columns
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function get($columns = ['*']): Collection
     {
@@ -692,7 +693,7 @@ class Builder
      *
      * @param array $columns
      * @param callable $callback
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     protected function onceWithColumns(array $columns, callable $callback): Collection
     {
@@ -731,13 +732,12 @@ class Builder
     {
         $query["scroll_id"] = $scrollId;
         return $this->connection->clearScroll($query);
-
     }
 
     protected function onceWithAggregate($response): Collection
     {
         foreach ($response['aggregations'] as $name => $agg) {
-            if ( ! is_array($agg)) {
+            if (! is_array($agg)) {
                 continue;
             }
             if (isset($agg['doc_count'])) {
@@ -781,10 +781,10 @@ class Builder
      * @param array $columns
      * @param string $pageName
      * @param int|null $page
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     * @return \Hyperf\Paginator\LengthAwarePaginator
+     * @throws \Hyperf\Di\Exception\NotFoundException
      */
-    public function paginate($perPage = 15, $columns = ['*'], $pageName = 'page', $page = null)
+    public function paginate($perPage = 15, $columns = ['*'], $pageName = 'page', $page = null): LengthAwarePaginator
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
@@ -803,19 +803,29 @@ class Builder
     /**
      * Create a new length-aware paginator instance.
      *
-     * @param \Illuminate\Support\Collection $items
+     * @param Collection $items
      * @param int $total
      * @param int $perPage
      * @param int $currentPage
      * @param array $options
-     * @return \Illuminate\Pagination\LengthAwarePaginator
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     * @return \Hyperf\Paginator\LengthAwarePaginator
      */
     protected function paginator(Collection $items, int $total, int $perPage, int $currentPage, array $options): LengthAwarePaginator
     {
-        return Container::getInstance()->makeWith(LengthAwarePaginator::class, compact(
-            'items', 'total', 'perPage', 'currentPage', 'options'
+        return new LengthAwarePaginator(...compact(
+            'items',
+            'total',
+            'perPage',
+            'currentPage',
+            'options'
         ));
+//        return Container::make(LengthAwarePaginator::class, compact(
+//            'items',
+//            'total',
+//            'perPage',
+//            'currentPage',
+//            'options'
+//        ));
     }
 
     /**
@@ -823,7 +833,7 @@ class Builder
      *
      * @param string $column
      * @param  string|null  $key
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function pluck(string $column, $key = null): Collection
     {
@@ -850,7 +860,7 @@ class Builder
      * @param array|Collection $queryResult
      * @param string $column
      * @param string|null $key
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     protected function pluckFromArrayColumn($queryResult, string $column, ?string $key): Collection
     {
@@ -902,7 +912,7 @@ class Builder
         try {
             $this->insertGetVersion($values);
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
     }
@@ -930,8 +940,8 @@ class Builder
             return $this->connection->insert(
                 $this->grammar->compileInsert($this, $values)
             );
-        } catch (\Exception $e) {
-            throw new \Exception($e->getMessage(), $e->getCode(), $e);
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
 

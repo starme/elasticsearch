@@ -2,12 +2,19 @@
 
 namespace Starme\Elasticsearch;
 
-use Illuminate\Support\Arr;
+use Hyperf\Contract\ConfigInterface;
+use Hyperf\Contract\ContainerInterface;
+use Hyperf\Utils\Arr;
 use InvalidArgumentException;
+use Hyperf\Di\Annotation\Inject;
 
 class ConnectionResolver implements ConnectionResolverInterface
 {
-
+    /**
+     * @inject
+     *
+     * @var ContainerInterface
+     */
     protected $app;
 
     /**
@@ -25,17 +32,6 @@ class ConnectionResolver implements ConnectionResolverInterface
     protected $default = 'default';
 
     /**
-     * Create a new connection resolver instance.
-     *
-     * @param $app
-     * @return void
-     */
-    public function __construct($app)
-    {
-        $this->app = $app;
-    }
-
-    /**
      * Get a database connection instance.
      *
      * @param  string|null  $name
@@ -49,7 +45,8 @@ class ConnectionResolver implements ConnectionResolverInterface
 
         if (! isset($this->connections[$name])) {
             $this->connections[$name] = $this->configure(
-                $this->makeConnection($name), 'read'
+                $this->makeConnection($name),
+                'read'
             );
         }
 
@@ -153,11 +150,7 @@ class ConnectionResolver implements ConnectionResolverInterface
     {
         $config = $this->configuration($name);
 
-        $connection = new Connection(
-            $config,
-            $this->app['log']->channel($config['logger'])
-        );
-        return $connection->setEvents($this->app['events']);
+        return new Connection($config);
     }
 
     /**
@@ -175,7 +168,8 @@ class ConnectionResolver implements ConnectionResolverInterface
         // To get the database connection configuration, we will just pull each of the
         // connection configurations and get the configurations for the given name.
         // If the configuration doesn't exist, we'll throw an exception and bail.
-        $connections = $this->app['config']['es.connections'];
+        $config = $this->app->get(ConfigInterface::class);
+        $connections = $config->get('es.connections');
 
         if (is_null($config = Arr::get($connections, $name))) {
             throw new InvalidArgumentException("Database connection [{$name}] not configured.");
@@ -207,5 +201,4 @@ class ConnectionResolver implements ConnectionResolverInterface
     {
         return $this->connection()->$method(...$parameters);
     }
-
 }

@@ -1,10 +1,8 @@
 <?php
 namespace Starme\Elasticsearch\Query\Grammars;
 
-
 trait Warp
 {
-
     protected $tablePrefix;
 
     /**
@@ -18,10 +16,9 @@ trait Warp
     {
         $id = $columns['id'] ?? "";
 
-        if ( ! $build_script) {
+        if (! $build_script) {
             $body['script'] = $this->compileScript($columns);
-        }
-        else{
+        } else {
             $body = array_map([$this, 'wrap'], $columns);
         }
         return compact('id', 'body');

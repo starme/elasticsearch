@@ -11,6 +11,7 @@ use Starme\Elasticsearch\Query\Builder as QueryBuilder;
 use Starme\Elasticsearch\Query\Grammar as QueryGrammar;
 use Starme\Elasticsearch\Schema\Builder as SchemaBuilder;
 use Starme\Elasticsearch\Schema\Grammar as SchemaGrammar;
+use Hyperf\Di\Annotation\Inject;
 
 class Connection implements ConnectionInterface
 {
@@ -21,8 +22,8 @@ class Connection implements ConnectionInterface
 
     /**
      * The event dispatcher instance.
-     *
-     * @var object
+     * @inject
+     * @var \Hyperf\Event\EventDispatcher
      */
     protected $events;
 
@@ -77,7 +78,7 @@ class Connection implements ConnectionInterface
     protected $schemaGrammar;
 
 
-    public function __construct($config, LoggerInterface $logger)
+    public function __construct($config, LoggerInterface $logger=null)
     {
         $this->config = $config;
         $this->logger = $logger;
@@ -107,11 +108,11 @@ class Connection implements ConnectionInterface
         $builder = ClientBuilder::create();
         $builder->setHosts($this->config["servers"]);
 
-        if ( ! empty($this->config['handler'])) {
+        if (! empty($this->config['handler'])) {
             $builder->setHandler($this->config['handler']);
         }
 
-        $builder->setLogger($this->logger);
+//        $builder->setLogger($this->logger);
         return $builder->build();
     }
 
@@ -194,13 +195,10 @@ class Connection implements ConnectionInterface
 
     /**
      * Run a select statement against the elasticsearch.
-     *
-     * @params array $body
-     * @throws \Starme\Elasticsearch\Exceptions\QueryException
      */
-    public function select(array $params)
+    public function select(array $params=[])
     {
-        if ( ! isset($params['scroll_id'])) {
+        if (! isset($params['scroll_id'])) {
             return $this->run('search', $params);
         }
         return $this->run('scroll', array_intersect_key($params, ['scroll_id'=>1, 'scroll'=>1]));
@@ -208,9 +206,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Run an insert statement against the elasticsearch.
-     *
-     * @params array $params
-     * @throws \Starme\Elasticsearch\Exceptions\QueryException
      */
     public function insert($params)
     {
@@ -219,13 +214,10 @@ class Connection implements ConnectionInterface
 
     /**
      * Run an update statement against the elasticsearch.
-     *
-     * @params array $params
-     * @throws \Starme\Elasticsearch\Exceptions\QueryException
      */
     public function update($params, $by_query=false)
     {
-        if(isset($this->config['update_retry'])) {
+        if (isset($this->config['update_retry'])) {
             $params['retry_on_conflict'] = intval($this->config['update_retry']);
         }
 
@@ -237,9 +229,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Run an delete statement against the elasticsearch.
-     *
-     * @params array $params
-     * @throws \Starme\Elasticsearch\Exceptions\QueryException
      */
     public function delete($params)
     {
@@ -248,10 +237,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Run an template statement against the elasticsearch.
-     *
-     * @params string $type
-     * @params array $params
-     * @throws \Starme\Elasticsearch\Exceptions\QueryException
      */
     public function template(string $type, array $params)
     {
@@ -262,10 +247,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Run an template statement against the elasticsearch.
-     *
-     * @params string $type
-     * @params array $params
-     * @throws \Starme\Elasticsearch\Exceptions\QueryException
      */
     public function alias(string $type, array $params)
     {
@@ -276,13 +257,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Run a SQL statement and log its execution context.
-     *
-     * @param string $method
-     * @param array $queries
-     * @param \Closure|null $callback
-     * @return mixed
-     *
-     * @throws \Starme\Elasticsearch\Exceptions\QueryException
      */
     protected function run(string $method, array $queries, Closure $callback = null)
     {
@@ -309,7 +283,9 @@ class Connection implements ConnectionInterface
         // then log the query, bindings, and execution time so we will report them on
         // the event that the developer needs them. We'll log time in milliseconds.
         $this->logQuery(
-            $method, $queries, $this->getElapsedTime($start)
+            $method,
+            $queries,
+            $this->getElapsedTime($start)
         );
 
         return $result;
@@ -317,13 +293,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Run a SQL statement.
-     *
-     * @param string $method
-     * @param array $queries
-     * @param \Closure $callback
-     * @return mixed
-     *
-     * @throws \Starme\Elasticsearch\Exceptions\QueryException
      */
     protected function runQueryCallback(string $method, array $queries, Closure $callback)
     {
@@ -334,12 +303,14 @@ class Connection implements ConnectionInterface
             $result = $callback($method, $queries);
         }
 
-            // If an exception occurs when attempting to run a query, we'll format the error
-            // message to include the bindings with SQL, which will make this exception a
-            // lot more helpful to the developer instead of just the database's errors.
+        // If an exception occurs when attempting to run a query, we'll format the error
+        // message to include the bindings with SQL, which will make this exception a
+        // lot more helpful to the developer instead of just the database's errors.
         catch (Exception $e) {
             throw new Exceptions\QueryException(
-                $method, $queries, $e
+                $method,
+                $queries,
+                $e
             );
         }
 
@@ -348,11 +319,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Log a query in the connection's query log.
-     *
-     * @param string $method
-     * @param array $queries
-     * @param  float|null  $time
-     * @return void
      */
     public function logQuery(string $method, array $queries, $time = null)
     {
@@ -365,9 +331,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Get the elapsed time since a given starting point.
-     *
-     * @param int $start
-     * @return float
      */
     protected function getElapsedTime(int $start): float
     {
@@ -376,10 +339,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Reconnect to the database.
-     *
-     * @return void
-     *
-     * @throws \LogicException
      */
     public function reconnect()
     {
@@ -392,8 +351,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Disconnect from the underlying PDO connection.
-     *
-     * @return void
      */
     public function disconnect()
     {
@@ -402,8 +359,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Reconnect to the database if a PDO connection is missing.
-     *
-     * @return void
      */
     protected function reconnectIfMissingConnection()
     {
@@ -414,9 +369,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Fire the given event if possible.
-     *
-     * @param  mixed  $event
-     * @return void
      */
     protected function event($event)
     {
@@ -427,9 +379,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Register a database query listener with the connection.
-     *
-     * @param  \Closure  $callback
-     * @return void
      */
     public function listen(Closure $callback)
     {
@@ -440,8 +389,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Get the query grammar used by the connection.
-     *
-     * @return \Starme\Elasticsearch\Query\Grammar
      */
     public function getQueryGrammar(): QueryGrammar
     {
@@ -450,8 +397,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Get the schema grammar used by the connection.
-     *
-     * @return \Starme\Elasticsearch\Schema\Grammar
      */
     public function getSchemaGrammar(): SchemaGrammar
     {
@@ -460,9 +405,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Get an option from the configuration options.
-     *
-     * @param string $string
-     * @return mixed
      */
     public function getConfig(string $string)
     {
@@ -471,8 +413,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Get the table prefix for the connection.
-     *
-     * @return string
      */
     public function getTablePrefix(): string
     {
@@ -481,9 +421,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Set the table prefix in use by the connection.
-     *
-     * @param string $prefix
-     * @return \Starme\Elasticsearch\Connection
      */
     public function setTablePrefix(string $prefix): Connection
     {
@@ -496,8 +433,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Get the connection query log.
-     *
-     * @return array
      */
     public function getQueryLog(): array
     {
@@ -506,8 +441,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Clear the query log.
-     *
-     * @return void
      */
     public function flushQueryLog()
     {
@@ -516,8 +449,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Enable the query log on the connection.
-     *
-     * @return void
      */
     public function enableQueryLog()
     {
@@ -526,8 +457,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Disable the query log on the connection.
-     *
-     * @return void
      */
     public function disableQueryLog()
     {
@@ -536,8 +465,6 @@ class Connection implements ConnectionInterface
 
     /**
      * Determine whether we're logging queries.
-     *
-     * @return bool
      */
     public function logging(): bool
     {
